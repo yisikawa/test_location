@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
@@ -96,7 +97,7 @@ class _MapPageState extends State<MapPage> {
       setState(() {
         selectedDate = picked;
         //ここで選択された値を変数なり、コントローラーに代入する
-//        globals.targetDate = DateFormat('yyyyMMdd').format(selectedDate);
+        globals.targetDate = DateFormat('yyyyMMdd').format(selectedDate);
         print('select date = ' + globals.targetDate);
       });
     }
@@ -120,7 +121,7 @@ class _MapPageState extends State<MapPage> {
     return new AppBar(
       title: new Text("Map"),
 //      centerTitle: true,
-//      leading:
+      leading: IconButton(icon: Icon(Icons.menu), onPressed: null),
       actions: <Widget>[
         PopupMenuButton<String>(
           icon: Icon(Icons.account_box),

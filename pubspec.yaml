@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   http: any
   google_maps_flutter: any
+  intl: any
 
 dev_dependencies:
   flutter_test:
