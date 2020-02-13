@@ -6,15 +6,17 @@ import 'dart:async';
 import 'dart:convert';
 import 'globals.dart' as globals;
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      title: 'Flutter Simple Login Demo',
-      theme: new ThemeData(primarySwatch: Colors.blueGrey),
-      home: new MapPage(title: 'Map Page'),
+    return MaterialApp(
+      title: 'Map Page Demo',
+      theme: ThemeData(primarySwatch: Colors.blueGrey),
+      home: MapPage(title: 'Map Page'),
     );
   }
 }
@@ -33,30 +35,45 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   List<String> _data = [];
+  String _selectedChoice = ''; // The app's "state".
+
+  void _select(String choice) {
+    // Causes the app to rebuild with the new _selectedChoice.
+    setState(() {
+      _selectedChoice = choice;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getAuth();
+//    _selectedChoice = _data[0];
+  }
 
   Future<void> _getAuth() async {
-    final res = await http.get(
+    var res = await http.get(
       globals.targetUrl + 'api/auth',
       headers: {HttpHeaders.authorizationHeader: globals.authToken},
     );
+
     var jsonList = json.decode(res.body);
 
-    print('jsonList = ' + jsonList.toString());
-    jsonList.forEach((key, value) {
-      print('_data:key = $key value = $value');
-      _data.add(value);
+    jsonList.forEach((value) {
+      Map _temp = value;
+      _data.add(_temp['user_id']);
     });
-    print('_data.length = ' + _data.length.toString());
+    _data.forEach((val) {
+      print('_data = ' + val);
+    });
   }
 
   Widget buildListView() {
-    _getAuth();
-    return ListView.builder(
-        padding: const EdgeInsets.all(16.0),
+    return new ListView.builder(
+        padding: const EdgeInsets.all(8.0),
         itemCount: _data.length,
         /* Divider を挟む */
         itemBuilder: (context, i) {
-          if (i.isOdd) return Divider();
           final index = i;
           return ListTile(
             title: Text(_data[index]),
@@ -105,8 +122,21 @@ class _MapPageState extends State<MapPage> {
 //      centerTitle: true,
 //      leading:
       actions: <Widget>[
-        IconButton(
-            icon: Icon(Icons.account_box), onPressed: () => buildListView()),
+        PopupMenuButton<String>(
+          icon: Icon(Icons.account_box),
+          initialValue: _selectedChoice,
+          onSelected: _select,
+          itemBuilder: (BuildContext context) {
+            return _data.map((String choice) {
+              return PopupMenuItem(
+                value: choice,
+                child: Text(choice),
+              );
+            }).toList();
+          },
+        ),
+//        IconButton(
+//            icon: Icon(Icons.account_box), onPressed: () => buildListView()),
         IconButton(
             icon: Icon(Icons.calendar_today),
             onPressed: () => _selectDate(context)),
