@@ -40,8 +40,7 @@ class _MapPageState extends State<MapPage> {
   List<String> _data = [];
   List<LatLng> points = [];
   String _selectedChoice = ''; // The app's "state".
-  MapController mapController = MapController();
-
+  MapController mapController;
   var bounds = new LatLngBounds();
 
   void _select(String choice) {
@@ -54,9 +53,9 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-
     _getAuth();
     _getRoute();
+    mapController = MapController();
   }
 
   Future<void> _getRoute() async {
@@ -164,23 +163,15 @@ class _MapPageState extends State<MapPage> {
         IconButton(
             icon: Icon(Icons.directions_walk),
             onPressed: () {
-              setState(() {
-                mapController.move(points.first, 17.0);
-                print('mapCon =' +
-                    mapController.center.latitude.toString() +
-                    mapController.center.longitude.toString());
+              points.forEach((val) {
+                bounds.extend(val);
               });
-//              points.forEach((val) {
-//                bounds.extend(val);
-//              });
-//              print('boundsNE = (,) = ' + bounds.northEast.toString());
-//              print('boundsSW = (,) = ' + bounds.southWest.toString());
-//              mapController.fitBounds(
-//                bounds,
-//                options: FitBoundsOptions(
-//                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
-//                ),
-//              );
+              mapController.fitBounds(
+                bounds,
+                options: FitBoundsOptions(
+                  padding: EdgeInsets.only(left: 0.0, right: 0.0),
+                ),
+              );
             }),
         IconButton(
           icon: Icon(Icons.location_on),
@@ -192,6 +183,7 @@ class _MapPageState extends State<MapPage> {
 
   Widget _mapView(BuildContext context) {
     return new FlutterMap(
+      mapController: mapController,
       options: new MapOptions(
         center: new LatLng(35.000081, 137.004055),
         zoom: 17.0,
