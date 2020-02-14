@@ -38,6 +38,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   List<String> _data = [];
+  List<LatLng> points = [];
   String _selectedChoice = ''; // The app's "state".
 
   void _select(String choice) {
@@ -71,11 +72,7 @@ class _MapPageState extends State<MapPage> {
 //        print(
 //            'trks.trksegs.trkpts length = ' + trksegs.trkpts.length.toString());
         trksegs.trkpts.forEach((val) {
-          print(' (lat,lng) = ( ' +
-              val.lat.toString() +
-              ' , ' +
-              val.lon.toString() +
-              ' ),');
+          points.add(LatLng(val.lat, val.lon));
         });
       });
     });
@@ -186,6 +183,11 @@ class _MapPageState extends State<MapPage> {
                 'pk.eyJ1IjoieWlzaWthd2EiLCJhIjoiY2s2YndmdXFuMGZ1bDNsb3ZnMXBsbnI3eSJ9.gftC8NPsB9xNWIVEdWnTvw',
             'id': 'mapbox.streets',
           },
+        ),
+        new PolylineLayerOptions(
+          polylines: [
+            Polyline(points: points, strokeWidth: 10.0, color: Colors.red),
+          ],
         ),
       ],
     );
