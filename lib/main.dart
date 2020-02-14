@@ -158,18 +158,6 @@ class _MapPageState extends State<MapPage> {
             'id': 'mapbox.streets',
           },
         ),
-        new MarkerLayerOptions(
-          markers: [
-            new Marker(
-              width: 20.0,
-              height: 20.0,
-              point: new LatLng(35.000081, 137.004055),
-              builder: (ctx) => new Container(
-                child: new FlutterLogo(),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
