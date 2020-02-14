@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+import 'package:gpx/gpx.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:async';
@@ -50,6 +51,34 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _getAuth();
+    _getRoute();
+  }
+
+  Future<void> _getRoute() async {
+    var res = await http.get(
+      globals.targetUrl +
+          'api/route?userid=' +
+          'geko31c' +
+          '&date=' +
+          '20200127' +
+          '&type=' +
+          '1',
+      headers: {HttpHeaders.authorizationHeader: globals.authToken},
+    );
+    var xmlGpx = GpxReader().fromString(res.body);
+    xmlGpx.trks.forEach((trks) {
+      trks.trksegs.forEach((trksegs) {
+//        print(
+//            'trks.trksegs.trkpts length = ' + trksegs.trkpts.length.toString());
+        trksegs.trkpts.forEach((val) {
+          print(' (lat,lng) = ( ' +
+              val.lat.toString() +
+              ' , ' +
+              val.lon.toString() +
+              ' ),');
+        });
+      });
+    });
   }
 
   Future<void> _getAuth() async {
