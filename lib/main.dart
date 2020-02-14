@@ -40,6 +40,9 @@ class _MapPageState extends State<MapPage> {
   List<String> _data = [];
   List<LatLng> points = [];
   String _selectedChoice = ''; // The app's "state".
+  MapController mapController = MapController();
+
+  var bounds = new LatLngBounds();
 
   void _select(String choice) {
     // Causes the app to rebuild with the new _selectedChoice.
@@ -51,6 +54,7 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+
     _getAuth();
     _getRoute();
   }
@@ -69,8 +73,6 @@ class _MapPageState extends State<MapPage> {
     var xmlGpx = GpxReader().fromString(res.body);
     xmlGpx.trks.forEach((trks) {
       trks.trksegs.forEach((trksegs) {
-//        print(
-//            'trks.trksegs.trkpts length = ' + trksegs.trkpts.length.toString());
         trksegs.trkpts.forEach((val) {
           points.add(LatLng(val.lat, val.lon));
         });
@@ -159,7 +161,27 @@ class _MapPageState extends State<MapPage> {
             icon: Icon(Icons.calendar_today),
             onPressed: () => _selectDate(context)),
         IconButton(icon: Icon(Icons.watch_later), onPressed: null),
-        IconButton(icon: Icon(Icons.directions_walk), onPressed: null),
+        IconButton(
+            icon: Icon(Icons.directions_walk),
+            onPressed: () {
+              setState(() {
+                mapController.move(points.first, 17.0);
+                print('mapCon =' +
+                    mapController.center.latitude.toString() +
+                    mapController.center.longitude.toString());
+              });
+//              points.forEach((val) {
+//                bounds.extend(val);
+//              });
+//              print('boundsNE = (,) = ' + bounds.northEast.toString());
+//              print('boundsSW = (,) = ' + bounds.southWest.toString());
+//              mapController.fitBounds(
+//                bounds,
+//                options: FitBoundsOptions(
+//                  padding: EdgeInsets.only(left: 15.0, right: 15.0),
+//                ),
+//              );
+            }),
         IconButton(
           icon: Icon(Icons.location_on),
           onPressed: null,
@@ -176,14 +198,16 @@ class _MapPageState extends State<MapPage> {
       ),
       layers: [
         new TileLayerOptions(
-          urlTemplate: "https://api.tiles.mapbox.com/v4/"
-              "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
-          additionalOptions: {
-            'accessToken':
-                'pk.eyJ1IjoieWlzaWthd2EiLCJhIjoiY2s2YndmdXFuMGZ1bDNsb3ZnMXBsbnI3eSJ9.gftC8NPsB9xNWIVEdWnTvw',
-            'id': 'mapbox.streets',
-          },
-        ),
+            urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            subdomains: ['a', 'b', 'c']
+//          urlTemplate: "https://api.tiles.mapbox.com/v4/"
+//              "{id}/{z}/{x}/{y}@2x.png?access_token={accessToken}",
+//          additionalOptions: {
+//            'accessToken':
+//                'pk.eyJ1IjoieWlzaWthd2EiLCJhIjoiY2s2YndmdXFuMGZ1bDNsb3ZnMXBsbnI3eSJ9.gftC8NPsB9xNWIVEdWnTvw',
+//            'id': 'mapbox.streets',
+//          },
+            ),
         new PolylineLayerOptions(
           polylines: [
             Polyline(points: points, strokeWidth: 10.0, color: Colors.red),
