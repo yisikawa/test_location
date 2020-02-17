@@ -15,6 +15,7 @@ dependencies:
   http: any
   intl: any
   gpx: ^0.0.3
+  geojson: ^0.8.0
 
 dev_dependencies:
   flutter_test:
