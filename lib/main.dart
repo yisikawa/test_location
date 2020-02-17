@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:gpx/gpx.dart';
 import 'package:intl/intl.dart';
+import 'package:geojson/geojson.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
@@ -37,11 +38,14 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
+  List<Marker> markersData = [];
   List<String> _data = [];
   List<LatLng> points = [];
   String _selectedChoice = ''; // The app's "state".
   MapController mapController;
   var bounds = new LatLngBounds();
+  DateTime selectedDate = DateTime.now();
+  String selectDate = '';
 
   void _select(String choice) {
     // Causes the app to rebuild with the new _selectedChoice.
@@ -54,7 +58,7 @@ class _MapPageState extends State<MapPage> {
   void initState() {
     super.initState();
     _getAuth();
-    _getRoute();
+    _getMarker();
     mapController = MapController();
   }
 
@@ -62,13 +66,15 @@ class _MapPageState extends State<MapPage> {
     var res = await http.get(
       globals.targetUrl +
           'api/route?userid=' +
-          'geko31c' +
+          _selectedChoice +
           '&date=' +
-          '20200127' +
+          globals.targetDate +
           '&type=' +
           '1',
       headers: {HttpHeaders.authorizationHeader: globals.authToken},
     );
+
+    points.clear();
     var xmlGpx = GpxReader().fromString(res.body);
     xmlGpx.trks.forEach((trks) {
       trks.trksegs.forEach((trksegs) {
@@ -76,6 +82,39 @@ class _MapPageState extends State<MapPage> {
           points.add(LatLng(val.lat, val.lon));
         });
       });
+    });
+
+    points.forEach((val) {
+      bounds.extend(val);
+    });
+
+    mapController.fitBounds(
+      bounds,
+      options: FitBoundsOptions(
+        padding: EdgeInsets.only(left: 8.0, right: 8.0),
+      ),
+    );
+  }
+
+  Future<void> _getMarker() async {
+    var res = await http.get(
+      globals.targetUrl + 'api/marker',
+      headers: {HttpHeaders.authorizationHeader: globals.authToken},
+    );
+    markersData.clear();
+
+    var features = await featuresFromGeoJson(res.body);
+    features.collection.forEach((element) {
+      GeoJsonPoint tmp = element.geometry;
+//      LatLng point = tmp.geoPoint.toLatLng();
+      Marker tmpdata = new Marker(
+        point: tmp.geoPoint.toLatLng(),
+        builder: (ctx) =>
+            new Container(child: Image.asset('images/pin-icon-wpt.png')),
+        width: 40.0,
+        height: 40.0,
+      );
+      markersData.add(tmpdata);
     });
   }
 
@@ -91,23 +130,10 @@ class _MapPageState extends State<MapPage> {
       Map _temp = value;
       _data.add(_temp['user_id']);
     });
+    if (_data.length >= 0) {
+      _selectedChoice = _data.first;
+    }
   }
-
-  Widget buildListView() {
-    return new ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: _data.length,
-        /* Divider を挟む */
-        itemBuilder: (context, i) {
-          final index = i;
-          return ListTile(
-            title: Text(_data[index]),
-          );
-        });
-  }
-
-  DateTime selectedDate = DateTime.now();
-  String selectDate = '';
 
   Future<Null> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -122,7 +148,7 @@ class _MapPageState extends State<MapPage> {
         selectedDate = picked;
         //ここで選択された値を変数なり、コントローラーに代入する
         globals.targetDate = DateFormat('yyyyMMdd').format(selectedDate);
-        print('select date = ' + globals.targetDate);
+//        print('select date = ' + globals.targetDate);
       });
     }
   }
@@ -161,22 +187,9 @@ class _MapPageState extends State<MapPage> {
             onPressed: () => _selectDate(context)),
         IconButton(icon: Icon(Icons.watch_later), onPressed: null),
         IconButton(
-            icon: Icon(Icons.directions_walk),
-            onPressed: () {
-              points.forEach((val) {
-                bounds.extend(val);
-              });
-              mapController.fitBounds(
-                bounds,
-                options: FitBoundsOptions(
-                  padding: EdgeInsets.only(left: 0.0, right: 0.0),
-                ),
-              );
-            }),
+            icon: Icon(Icons.directions_walk), onPressed: () => _getRoute()),
         IconButton(
-          icon: Icon(Icons.location_on),
-          onPressed: null,
-        ),
+            icon: Icon(Icons.location_on), onPressed: () => _getMarker()),
       ],
     );
   }
@@ -204,6 +217,9 @@ class _MapPageState extends State<MapPage> {
           polylines: [
             Polyline(points: points, strokeWidth: 10.0, color: Colors.red),
           ],
+        ),
+        new MarkerLayerOptions(
+          markers: markersData,
         ),
       ],
     );
