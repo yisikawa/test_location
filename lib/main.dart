@@ -57,9 +57,11 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    globals.targetDate = DateFormat('yyyyMMdd').format(DateTime.now());
     _getAuth();
     _getMarker();
     mapController = MapController();
+    _getRoute();
   }
 
   Future<void> _getRoute() async {
@@ -94,6 +96,18 @@ class _MapPageState extends State<MapPage> {
         padding: EdgeInsets.only(left: 8.0, right: 8.0),
       ),
     );
+  }
+
+  Future<void> _getRating() async {
+    var res = await http.get(
+      globals.targetUrl +
+          'api/rating?userid=' +
+          _selectedChoice +
+          '&date=' +
+          globals.targetDate,
+      headers: {HttpHeaders.authorizationHeader: globals.authToken},
+    );
+    print('rating =' + res.body);
   }
 
   Future<void> _getMarker() async {
@@ -139,7 +153,7 @@ class _MapPageState extends State<MapPage> {
     final DateTime picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
-      firstDate: DateTime(2019, 4),
+      firstDate: DateTime(2018, 11),
       lastDate: DateTime.now(),
     );
 
@@ -150,6 +164,7 @@ class _MapPageState extends State<MapPage> {
         globals.targetDate = DateFormat('yyyyMMdd').format(selectedDate);
 //        print('select date = ' + globals.targetDate);
       });
+      _getRoute();
     }
   }
 
@@ -177,6 +192,7 @@ class _MapPageState extends State<MapPage> {
                 value: choice,
                 child: Text(choice),
               );
+              _getRoute();
             }).toList();
           },
         ),
@@ -185,7 +201,8 @@ class _MapPageState extends State<MapPage> {
         IconButton(
             icon: Icon(Icons.calendar_today),
             onPressed: () => _selectDate(context)),
-        IconButton(icon: Icon(Icons.watch_later), onPressed: null),
+        IconButton(
+            icon: Icon(Icons.watch_later), onPressed: () => _getRating()),
         IconButton(
             icon: Icon(Icons.directions_walk), onPressed: () => _getRoute()),
         IconButton(
